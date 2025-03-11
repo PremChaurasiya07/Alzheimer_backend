@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
+import os
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "1"
 import cv2
 import os
 import onnxruntime as ort
