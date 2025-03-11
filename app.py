@@ -7,15 +7,15 @@ import onnxruntime as ort
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 
-# Ensure OpenCV environment variables are set before importing it
+
 os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "1"
 os.environ["OPENCV_OPENGL"] = "0"
 
 app = Flask(__name__)
 
-# Load Models
+
 try:
-    random_forest_model = joblib.load("Alzheimer_Model.pkl")  # Structured data model
+    random_forest_model = joblib.load("Alzheimer_Model.pkl")  # Text model
     onnx_session = ort.InferenceSession("Mri_Alzhiemer.onnx")  # MRI model
     le_gender = joblib.load("./encoder_model1/le_gender.pkl")
     le_hand = joblib.load("./encoder_model1/le_hand.pkl")
@@ -23,7 +23,7 @@ except Exception as e:
     print(f"Error loading models: {e}")
     exit(1)
 
-# Allowed file formats
+
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 def allowed_file(filename):
