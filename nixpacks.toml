@@ -1,2 +1,2 @@
 [phases.setup]
-nixPkgs = ["python310","mesa"]
+nixPkgs = ["python310", "mesa", "libGL", "libGLU", "ffmpeg"]
