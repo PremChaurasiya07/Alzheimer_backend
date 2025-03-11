@@ -3,8 +3,8 @@ import joblib
 import numpy as np
 import os
 os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "1"
+os.environ["OPENCV_OPENGL"] = "0"
 import cv2
-import os
 import onnxruntime as ort
 from werkzeug.utils import secure_filename
 import pandas as pd
