@@ -6,13 +6,16 @@ import pandas as pd
 import onnxruntime as ort
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
+from flask_cors import CORS  # Import CORS
 
-
-os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "1"
-os.environ["OPENCV_OPENGL"] = "0"
-
+# Initialize Flask app
 app = Flask(__name__)
 
+# Apply CORS to all routes
+CORS(app)
+
+# If you need to customize CORS (like allowing only specific domains)
+# CORS(app, resources={r"/predict": {"origins": "http://example.com"}})
 
 try:
     random_forest_model = joblib.load("Alzheimer_Model.pkl")  # Text model
@@ -22,7 +25,6 @@ try:
 except Exception as e:
     print(f"Error loading models: {e}")
     exit(1)
-
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
