@@ -1,2 +1,6 @@
 [phases.setup]
-nixPkgs = ["python310", "mesa", "libGL", "libGLU", "ffmpeg"]
+nixPkgs = ["python310", "mesa", "libGL", "libGLU", "ffmpeg", "rust"]
+envVars = {
+  "CARGO_HOME" = "/tmp/cargo"
+  "RUSTUP_HOME" = "/tmp/rustup"
+}
