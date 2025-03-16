@@ -37,10 +37,9 @@ def preprocess_image(image_path):
         image = cv2.imread(image_path)
         if image is None:
             raise ValueError("Invalid image file. Cannot read.")
-
-        image = cv2.resize(image, (128, 128))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = image.astype(np.float32) / 255.0  
+        image = cv2.resize(image, (128, 128))
+        image = image.astype(np.float32)
         image = np.expand_dims(image, axis=0)  
         return image
     except Exception as e:
