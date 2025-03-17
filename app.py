@@ -12,7 +12,7 @@ from flask_cors import CORS  # Import CORS
 app = Flask(__name__)
 
 # Apply CORS to all routes
-CORS(app)
+CORS(app,origins='*')
 
 # If you need to customize CORS (like allowing only specific domains)
 # CORS(app, resources={r"/predict": {"origins": "http://example.com"}})
@@ -89,6 +89,8 @@ def predict():
 
 @app.route("/predict-mri", methods=["POST"])
 def predict_mri():
+    print(request.form)  # Log form data
+    print(request.files)
     try:
         if "file" not in request.files:
             return jsonify({"error": "No file part in the request"}), 400
