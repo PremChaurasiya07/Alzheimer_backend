@@ -1,0 +1,13 @@
+# Ignore model files
+*.pkl
+*.h5
+*.onnx
+
+# Ignore uploads folder (if used for temporary files)
+uploads/
+
+# Ignore other common files
+__pycache__/
+*.pyc
+*.log
+.DS_Store
