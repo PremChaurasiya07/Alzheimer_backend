@@ -1,13 +1,5 @@
-# Ignore model files
-*.pkl
-*.h5
-*.onnx
+# Ignore virtual environment
+venv/
 
-# Ignore uploads folder (if used for temporary files)
-uploads/
-
-# Ignore other common files
-__pycache__/
-*.pyc
-*.log
-.DS_Store
+# Ignore Keras model file
+mri_alzheimer.kers

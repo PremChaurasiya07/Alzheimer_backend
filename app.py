@@ -3,27 +3,21 @@ import cv2
 import numpy as np
 import joblib
 import pandas as pd
-import onnxruntime as ort
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS  # Import CORS
-import base64  # Ensure this is imported at the top of the file
-from io import BytesIO
-from PIL import Image
-import matplotlib.pyplot as plt  # Ensure this is imported at the top of the file
+import onnxruntime as ort  # Import ONNX Runtime
 
 # Initialize Flask app
 app = Flask(__name__)
 
 # Apply CORS to all routes
-CORS(app,origins='*')
+CORS(app, origins='*')
 
-# If you need to customize CORS (like allowing only specific domains)
-# CORS(app, resources={r"/predict": {"origins": "http://example.com"}})
-
+# Load models
 try:
     random_forest_model = joblib.load("Alzheimer_Model.pkl")  # Text model
-    onnx_session = ort.InferenceSession("fresh_alzheimer.onnx")  # MRI model
+    onnx_session = ort.InferenceSession("new_Alzheimer.onnx")  # Load ONNX model
     le_gender = joblib.load("./encoder_model1/le_gender.pkl")
     le_hand = joblib.load("./encoder_model1/le_hand.pkl")
 except Exception as e:
@@ -36,15 +30,15 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def preprocess_image(image_path):
-    """Preprocess image for ONNX model input."""
+    """Preprocess an MRI image for ONNX model input."""
     try:
         image = cv2.imread(image_path)
         if image is None:
             raise ValueError("Invalid image file. Cannot read.")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, (128, 128))
-        image = image.astype(np.float32)
-        image = np.expand_dims(image, axis=0)  
+        image = cv2.resize(image, (128, 128))  # Ensure this matches the ONNX model input size
+        image = image.astype(np.float32) / 255.0  # Normalize pixel values to [0, 1]
+        image = np.expand_dims(image, axis=0)  # Add batch dimension
         return image
     except Exception as e:
         raise ValueError(f"Error in image preprocessing: {e}")
@@ -105,6 +99,7 @@ def predict_mri():
 
         if file and allowed_file(file.filename):
             os.makedirs("uploads", exist_ok=True)
+
             filename = secure_filename(file.filename)
             file_path = os.path.join("uploads", filename)
             file.save(file_path)
@@ -112,41 +107,28 @@ def predict_mri():
             try:
                 # Preprocess the image
                 image = preprocess_image(file_path)
-                input_tensor = {onnx_session.get_inputs()[0].name: image}
-                prediction = onnx_session.run(None, input_tensor)[0]
+
+                # Run the ONNX model
+                input_name = onnx_session.get_inputs()[0].name
+                prediction = onnx_session.run(None, {input_name: image})[0]
                 confidence = float(np.max(prediction) * 100)  # Convert to percentage
                 predicted_class = int(np.argmax(prediction))
 
                 # Define class labels
-                class_labels = {0: "No Dementia", 1: "Very Mild Dementia", 2: "Mild Dementia", 3: "Moderate Dementia"}
+                class_labels = {0: "Mild Demented", 1: "Moderate Demented", 2: "Non Demented", 3: "Very Mild Dementia"}
                 predicted_label = class_labels.get(predicted_class, "Unknown")
 
-                # Load the original image for visualization
-                original_image = cv2.imread(file_path)
-                original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)  # Convert to RGB
-
-                # Use matplotlib to overlay prediction text on the image
-                plt.figure(figsize=(6, 6))
-                plt.imshow(original_image)
-                plt.axis("off")
-                plt.title(f"{predicted_label} ({confidence:.2f}%)", fontsize=16, color="green")
-
-                # Save the visualized image to a buffer with padding
-                buffer = BytesIO()
-                plt.savefig(buffer, format="JPEG", bbox_inches="tight", pad_inches=0.5)  # Add padding with pad_inches
-                buffer.seek(0)
-
-                # Convert the visualized image to Base64
-                img_base64 = base64.b64encode(buffer.read()).decode("utf-8")
-                buffer.close()
+                os.remove(file_path)  # Clean up the uploaded file
 
                 return jsonify({
-                    "prediction": predicted_class,
-                    "confidence": confidence,
-                    "visualized_image_base64": img_base64  # Send Base64-encoded visualized image
+                    "prediction": predicted_label,
+                    "prediction_num": predicted_class,
+                    "probabilities": prediction.tolist(),
+                    "confidence": confidence
                 })
-            finally:
-                os.remove(file_path)  # Ensure file is deleted
+            except Exception as e:
+                os.remove(file_path)  # Ensure file is deleted in case of an error
+                raise e
         
         return jsonify({"error": "Invalid file format. Allowed: png, jpg, jpeg."}), 400
     except Exception as e:
